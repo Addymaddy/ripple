@@ -1,5 +1,6 @@
 package com.ripple.service;
 
+import com.ripple.model.UserCredentials;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import com.ripple.model.ApplicationUser;
@@ -14,27 +15,30 @@ import static com.ripple.model.SecurityConstants.SECRET;
  */
 public class TokenService {
 
-    public static String getUserToken(ApplicationUser user){
+    public static String getUserToken(UserCredentials user, long userId){
         String token = Jwts.builder()
-                .setSubject(user.getUsername())
+                .setSubject(user.getUserName() + ","+userId)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS512, SECRET)
                 .compact();
         return token;
     }
 
-    public static boolean validateToken(String userToken) {
+    public static String validateToken(String userToken) {
         if (userToken != null) {
-            String user = Jwts.parser()
+            String token = Jwts.parser()
                     .setSigningKey(SECRET)
                     .parseClaimsJws(userToken)
                     .getBody()
                     .getSubject();
-            if (user != null) {
-                return true;
+            if (token != null) {
+                String arr[] = token.split(",");
+                if(arr.length==2)
+                    return arr[1];
+                else
+                    return null;
             }
-            return false;
         }
-        return false;
+        return null;
     }
 }
