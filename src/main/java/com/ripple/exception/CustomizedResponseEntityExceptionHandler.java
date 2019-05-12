@@ -35,8 +35,6 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     return new ResponseEntity<>(rep, HttpStatus.BAD_REQUEST);
   }
 
-
-  //Exceptions ---
   @ExceptionHandler(UserNotFoundException.class)
   public final ResponseEntity<ApplicationResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
 
@@ -48,14 +46,14 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
   public final ResponseEntity<ApplicationResponse> handleUserTokenTemperedException(UserTokenTemperedException ex, WebRequest request) {
 
     ApplicationResponse rep = new ApplicationResponse(ApplicationCode.USER_TOKEN_TEMPERED, ex.getMessage());
-    return new ResponseEntity<>(rep, HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(rep, HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler(InvalidUserTokenException.class)
   public final ResponseEntity<ApplicationResponse> handleInvalidUserTokenException(InvalidUserTokenException ex, WebRequest request) {
 
     ApplicationResponse rep = new ApplicationResponse(ApplicationCode.INVALID_USER_TOKEN, ex.getMessage());
-    return new ResponseEntity<>(rep, HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(rep, HttpStatus.UNAUTHORIZED);
   }
 
 }
