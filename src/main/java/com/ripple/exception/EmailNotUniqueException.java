@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * Created by intel on 5/11/2019.
  */
-@ResponseStatus(HttpStatus.BAD_REQUEST)
 public class EmailNotUniqueException extends RuntimeException {
 
     public EmailNotUniqueException(String message) {

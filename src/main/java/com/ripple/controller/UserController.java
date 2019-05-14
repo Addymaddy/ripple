@@ -2,11 +2,13 @@ package com.ripple.controller;
 
 import com.ripple.exception.EmailNotUniqueException;
 import com.ripple.exception.MobileNoNotUniqueException;
+import com.ripple.exception.UserNotFoundException;
 import com.ripple.model.ApplicationCode;
 import com.ripple.model.ApplicationResponse;
 import com.ripple.model.ApplicationUser;
 import com.ripple.model.UserCredentials;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +24,20 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private ApplicationUserRepository applicationUserRepository;
+
+    @Autowired
+    ApplicationUserRepository applicationUserRepository;
+
+    @Autowired
+    TokenService tokenService;
 
     Logger logger = Logger.getLogger(UserController.class.getName());
-
-
-    public UserController(ApplicationUserRepository applicationUserRepository) {
-        this.applicationUserRepository = applicationUserRepository;
-    }
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApplicationResponse> signUp(@RequestBody ApplicationUser user) {
         validate(user);
         user.setPassword(DigestUtils.sha256Hex(user.getPassword()));
+        logger.info("Creating and saving user to database");
         applicationUserRepository.save(user);
         ApplicationResponse response = new ApplicationResponse(ApplicationCode.SUCCESSFUL_SIGNUP, "User Created succesfully");
         return new ResponseEntity<ApplicationResponse>(response, HttpStatus.CREATED);
@@ -45,12 +48,10 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ApplicationResponse> login(@RequestBody UserCredentials userCredentials) {
         String userName = userCredentials.getUserName();
-        System.out.println("Got the User credentials " + userCredentials.getUserName() + "     " +userCredentials.getPassword());
         ApplicationUser foundUser = applicationUserRepository.findByUsername(userName);
-
         if(foundUser==null){
-            ApplicationResponse response = new ApplicationResponse(ApplicationCode.FAILED_LOGIN, "User Doesnt Exist");
-            return new ResponseEntity<ApplicationResponse>(response, HttpStatus.UNAUTHORIZED);
+            logger.warning("No user found for userName" + userCredentials.getUserName());
+            throw new UserNotFoundException("User Doesnt Exist");
         }
 
         if(!foundUser.getPassword().equals(DigestUtils.sha256Hex(userCredentials.getPassword()))){
@@ -61,7 +62,7 @@ public class UserController {
         ApplicationResponse response = new ApplicationResponse(ApplicationCode.SUCCESS, "Login Successfull");
         response.addParams("userId", foundUser.getId()+"");
         HttpHeaders headers = new HttpHeaders();
-        headers.add("User_Token", TokenService.getUserToken(userCredentials, foundUser.getId()));
+        headers.add("User_Token", tokenService.getUserToken(userCredentials, foundUser.getId()));
         ResponseEntity<ApplicationResponse> result =  new ResponseEntity<ApplicationResponse>(response, headers, HttpStatus.OK);
 
         return result;

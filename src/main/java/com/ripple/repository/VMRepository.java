@@ -12,6 +12,5 @@ import java.util.List;
  */
 @Repository
 public interface VMRepository extends JpaRepository<VM, Long> {
-    //VM findByVmId(long vmId);
     List<VM> findByUserId(String userId);
 }

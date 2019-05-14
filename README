@@ -1,0 +1,5 @@
+Run the RippleApplication.java
+1. Signup the user as per the postman collection
+2. Login using the same user credential as signup to obtain a JWT token in response Header
+(token has the validity of 1 hour and is configurable in the application.properties file)
+3. Use the obtain token as request header (User_Token) in the other API calls in the postman collection.

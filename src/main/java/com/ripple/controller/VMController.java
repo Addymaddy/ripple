@@ -1,5 +1,6 @@
 package com.ripple.controller;
 
+import com.ripple.exception.InvalidUserTokenException;
 import com.ripple.exception.VmNotFoundException;
 import com.ripple.model.ApplicationCode;
 import com.ripple.model.ApplicationResponse;
@@ -7,12 +8,14 @@ import com.ripple.model.GetVmResponse;
 import com.ripple.model.VM;
 import com.ripple.repository.VMRepository;
 import com.ripple.service.TokenService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Created by intel on 5/10/2019.
@@ -21,61 +24,54 @@ import java.util.Optional;
 @RequestMapping("/vms")
 public class VMController {
 
-    private VMRepository vmRepository;
+    @Autowired
+    VMRepository vmRepository;
 
-    public VMController(VMRepository vmRepository) {
-        this.vmRepository = vmRepository;
-    }
+    @Autowired
+    TokenService tokenService;
+    Logger logger = Logger.getLogger(VMController.class.getName());
 
     @GetMapping("/list")
     public ResponseEntity<GetVmResponse> getVm( @RequestHeader("User_Token") String userToken){
 
+        ResponseEntity<GetVmResponse> responseEntity = null;
         String userId = null;
         if(userToken == null || userToken.isEmpty())
         {
-            GetVmResponse rep = new GetVmResponse(ApplicationCode.INVALID_USER_TOKEN,"Invalid User token");
-            return new ResponseEntity<GetVmResponse>(rep, HttpStatus.UNAUTHORIZED);
+
+            logger.warning("User Token Empty or invalid");
+            throw new InvalidUserTokenException("Invalid User Token");
         }
-        if((userId = TokenService.validateToken(userToken))!= null){
+        if((userId = tokenService.validateToken(userToken))!= null){
 
             GetVmResponse rep = new GetVmResponse(ApplicationCode.SUCCESS,"Vm Get Succcessfull");
-            System.out.println("Fetching the vm for --> "+Long.parseLong(userId));
+            logger.info("Fetching the vm for --> "+Long.parseLong(userId));
             List<VM> vmlist = vmRepository.findByUserId(userId);
             rep.setVmList(vmlist);
-            return new ResponseEntity<GetVmResponse>( rep, HttpStatus.OK);
+            responseEntity =  new ResponseEntity<GetVmResponse>( rep, HttpStatus.OK);
         }
-        else
-        {
-            GetVmResponse rep = new GetVmResponse(ApplicationCode.USER_TOKEN_TEMPERED,"User Tokken Tempered");
-            return new ResponseEntity<GetVmResponse>( rep, HttpStatus.UNAUTHORIZED);
-        }
+   return responseEntity;
     }
 
-
-
-    //TODO: Add the endpoint to post the VM for a user
     @PostMapping("/create")
     public ResponseEntity<ApplicationResponse> createVm(@RequestBody VM vm,
                                                         @RequestHeader("User_Token") String userToken){
         String userId = null;
+        ResponseEntity<ApplicationResponse> responseEntity = null;
         if(userToken == null || userToken.isEmpty())
         {
-            ApplicationResponse rep = new ApplicationResponse(ApplicationCode.INVALID_USER_TOKEN,"Invalid User token");
-            return new ResponseEntity<ApplicationResponse>( rep, HttpStatus.UNAUTHORIZED);
+            logger.warning("User token empty or invalid");
+            throw new InvalidUserTokenException("Invalid User Token");
         }
-        if((userId = TokenService.validateToken(userToken)) != null){
+
+        if((userId = tokenService.validateToken(userToken)) != null){
             vm.setUserId(userId);
-            System.out.println("saving the VM ---- >" + vm);
+            logger.info("saving the VM ---- >" + vm);
             vmRepository.save(vm);
             ApplicationResponse rep = new ApplicationResponse(ApplicationCode.SUCCESS,"VM created succesfully");
-            return new ResponseEntity<ApplicationResponse>( rep, HttpStatus.OK);
+            responseEntity = new ResponseEntity<ApplicationResponse>( rep, HttpStatus.OK);
         }
-        else
-        {
-            //TODO:: validate the VM , also think about putting the userId inside the Token itself
-            ApplicationResponse rep = new ApplicationResponse(ApplicationCode.USER_TOKEN_TEMPERED,"User Tokken Tempered");
-            return new ResponseEntity<ApplicationResponse>(rep, HttpStatus.UNAUTHORIZED);
-        }
+        return responseEntity;
     }
 
 
@@ -83,30 +79,29 @@ public class VMController {
     public ResponseEntity<ApplicationResponse> updateVm(@RequestBody VM vm, @PathVariable("vmId") String vmId,
                                                         @RequestHeader("User_Token") String userToken){
 
+        ResponseEntity<ApplicationResponse> responseEntity = null;
         if(userToken == null || userToken.isEmpty())
         {
-            ApplicationResponse rep = new ApplicationResponse(ApplicationCode.INVALID_USER_TOKEN,"Invalid User token");
-            return new ResponseEntity<ApplicationResponse>( rep, HttpStatus.UNAUTHORIZED);
+            logger.warning("User tokken empty or invalid");
+            throw new InvalidUserTokenException("Invalid User Token");
+
         }
-        if(TokenService.validateToken(userToken) != null){
+        if(tokenService.validateToken(userToken) != null){
             Optional<VM> existingVmOpt = vmRepository.findById(Long.parseLong(vmId));
             if(!existingVmOpt.isPresent())
             {
+                logger.warning("No VM info found for vm Id " + vmId);
                 throw new VmNotFoundException("No VM found for vmId "+vmId);
             }
             VM existingVM = existingVmOpt.get();
             updateVM(existingVM, vm);
-            System.out.println("Saving updated VM ---> "+ existingVM);
+            logger.info("Saving updated VM ---> "+ existingVM);
             vmRepository.save(existingVM);
             ApplicationResponse rep = new ApplicationResponse(ApplicationCode.SUCCESS,"VM updated succesfully");
-            return new ResponseEntity<ApplicationResponse>( rep, HttpStatus.OK);
+            responseEntity = new ResponseEntity<ApplicationResponse>( rep, HttpStatus.OK);
         }
-        else
-        {
-            //TODO:: validate the VM , also think about putting the userId inside the Token itself
-            ApplicationResponse rep = new ApplicationResponse(ApplicationCode.USER_TOKEN_TEMPERED,"User Tokken Tempered");
-            return new ResponseEntity<ApplicationResponse>( rep, HttpStatus.UNAUTHORIZED);
-        }
+        return responseEntity;
+
     }
 
     private void updateVM(VM existingVM, VM vm) {

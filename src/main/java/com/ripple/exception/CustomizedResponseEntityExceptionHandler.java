@@ -2,6 +2,7 @@ package com.ripple.exception;
 
 import com.ripple.model.ApplicationCode;
 import com.ripple.model.ApplicationResponse;
+import io.jsonwebtoken.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+
 
 @ControllerAdvice
 @RestController
@@ -42,8 +45,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     return new ResponseEntity<>(rep, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(UserTokenTemperedException.class)
-  public final ResponseEntity<ApplicationResponse> handleUserTokenTemperedException(UserTokenTemperedException ex, WebRequest request) {
+  @ExceptionHandler(SignatureException.class)
+  public final ResponseEntity<ApplicationResponse> handleUserTokenTemperedException(SignatureException ex, WebRequest request) {
 
     ApplicationResponse rep = new ApplicationResponse(ApplicationCode.USER_TOKEN_TEMPERED, ex.getMessage());
     return new ResponseEntity<>(rep, HttpStatus.UNAUTHORIZED);
