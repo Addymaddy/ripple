@@ -1,10 +1,5 @@
 package com.ripple.model;
 
-import javax.persistence.Entity;
-
-/**
- * Created by intel on 5/11/2019.
- */
 public class UserCredentials {
 
     private String userName;

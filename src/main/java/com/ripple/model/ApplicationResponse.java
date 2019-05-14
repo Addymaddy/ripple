@@ -3,9 +3,7 @@ package com.ripple.model;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by intel on 5/10/2019.
- */
+
 public class ApplicationResponse {
 
     public ApplicationResponse(String app_status_code, String msg) {

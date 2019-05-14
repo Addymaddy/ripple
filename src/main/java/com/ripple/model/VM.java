@@ -5,9 +5,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-/**
- * Created by intel on 5/10/2019.
- */
+
 @Entity
 public class VM {
     @Id

@@ -3,18 +3,11 @@ package com.ripple.service;
 import com.ripple.model.UserCredentials;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import com.ripple.model.ApplicationUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-import static com.ripple.model.SecurityConstants.EXPIRATION_TIME;
-import static com.ripple.model.SecurityConstants.SECRET;
-
-/**
- * Created by ahmed on 5/10/2019.
- */
 @Component
 public class TokenService {
 

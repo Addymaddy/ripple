@@ -17,9 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-/**
- * Created by intel on 5/10/2019.
- */
+
 @RestController
 @RequestMapping("/vms")
 public class VMController {
